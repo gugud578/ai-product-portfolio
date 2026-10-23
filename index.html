@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顾献月 · AI 产品原型作品集</title>
+<style>
+  :root{
+    --bg:#0B0D10; --card:#12161B; --line:#20262E; --text:#E6E4E0;
+    --dim:#828A94; --warm:#D6A66A; --mint:#4FB39A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:72px 40px 96px}
+  .wrap{max-width:1060px;margin:0 auto}
+  .eyebrow{font-size:11px;letter-spacing:2.5px;color:var(--dim);margin-bottom:22px}
+  h1{font-size:38px;font-weight:500;letter-spacing:.5px;line-height:1.45}
+  h1 em{font-style:normal;color:var(--warm)}
+  .lead{margin-top:20px;font-size:14.5px;line-height:2.05;color:#A8AFB8;max-width:620px}
+  .lead b{color:var(--text);font-weight:500}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:56px}
+  .card{display:block;text-decoration:none;color:inherit;background:var(--card);
+    border:1px solid var(--line);border-radius:16px;padding:30px 30px 28px;
+    transition:.28s ease;position:relative;overflow:hidden}
+  .card:hover{border-color:#3A4450;transform:translateY(-3px);
+    box-shadow:0 24px 48px -24px rgba(0,0,0,.85)}
+  .card .top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .badge{font-size:10px;letter-spacing:1.2px;color:var(--dim);border:1px solid var(--line);
+    border-radius:20px;padding:4px 10px}
+  .card h2{font-size:21px;font-weight:500;letter-spacing:.3px;line-height:1.5}
+  .card h2 span{color:var(--dim);font-size:14px;font-weight:400;display:block;margin-top:6px}
+  .card p{font-size:13px;line-height:1.95;color:#8E96A0;margin-top:16px}
+  .card .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+  .tag{font-size:10.5px;color:#9AA2AC;background:#191E25;border-radius:5px;padding:5px 9px}
+  .card .go{margin-top:26px;font-size:12px;color:var(--warm);display:flex;
+    align-items:center;gap:7px;letter-spacing:.5px}
+  .card .go i{font-style:normal;transition:transform .28s}
+  .card:hover .go i{transform:translateX(4px)}
+
+  .rule{height:1px;background:var(--line);margin:64px 0 34px}
+  .note{font-size:12.5px;color:#767E88;line-height:2}
+  .note b{color:#A8AFB8;font-weight:500}
+
+  @media (max-width:820px){
+    body{padding:48px 22px 72px}
+    .grid{grid-template-columns:1fr}
+    h1{font-size:29px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">AI 产品原型 · 2026</div>
+  <h1>两个 0-1 产品，<br>两种<em>不同的 AI 用法</em>。</h1>
+  <p class="lead">
+    一个把 LLM <b>关进确定性的笼子</b>——心理场景里说错一句话代价太高，所以大部分话不从模型嘴里出来。<br>
+    一个让 LLM <b>做它最擅长的事</b>——从一份卷子里找出每个学生错在哪，而教师始终握着确认权。
+  </p>
+
+  <div class="grid">
+    <a class="card" href="xinyu.html">
+      <div class="top"><span class="badge">项目 01</span><span class="badge">移动端 · 4 屏</span></div>
+      <h2>心屿 AI <span>AI 情绪陪伴对话服务</span></h2>
+      <p>面向在校生的文字心理陪伴。只承诺三件事：立刻在 · 不评判 · 说得出来。
+        已完成 36 篇冻结设计文档、45 条归口表、25 条话术红线。</p>
+      <div class="tags">
+        <span class="tag">AI 陪伴</span><span class="tag">安全边界</span>
+        <span class="tag">危机兜底</span><span class="tag">真人深访 20 例</span>
+      </div>
+      <div class="go">查看原型 <i>→</i></div>
+    </a>
+
+    <a class="card" href="chemai.html">
+      <div class="top"><span class="badge">项目 02</span><span class="badge">桌面端 · 5 屏</span></div>
+      <h2>ChemAI 智辅化学 <span>面向高中化学教师的 AI 教学 Agent</span></h2>
+      <p>不只给「统计」和「答案」，回答「这个学生为什么错」。
+        独立完成产品、后端、教师端与 Agent 运行时，1,538 个测试用例通过。</p>
+      <div class="tags">
+        <span class="tag">AI Agent</span><span class="tag">教育</span>
+        <span class="tag">审批门控</span><span class="tag">K12 场景</span>
+      </div>
+      <div class="go">查看原型 <i>→</i></div>
+    </a>
+  </div>
+
+  <div class="rule"></div>
+  <p class="note">
+    <b>怎么看：</b>点击进入后，用上方的屏幕标签（或 ← → 键）切换；右侧是每一屏的设计决策与真实验证数据。<br>
+    <b>共同点时：</b>两个产品都在回答同一个问题——<b>什么地方该让 AI 说，什么地方不该</b>。
+  </p>
+</div>
+</body>
+</html>
