@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChemAI 智辅化学 · 高保真原型</title>
+<style>
+  :root{
+    --page:#E9EDF1;
+    --surface:#FFFFFF;
+    --side:#F6F8FA;
+    --line:#E2E7EC;
+    --line-2:#EDF1F4;
+    --text:#151A1F;
+    --text-2:#3D4753;
+    --dim:#77818D;
+    --accent:#0E7C66;
+    --accent-soft:#E6F3EF;
+    --amber:#B45309;
+    --amber-soft:#FDF3E7;
+    --blue:#2563EB;
+    --rose:#BE123C;
+    --violet:#7C3AED;
+    --ok:#15803D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--page);color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;font-size:13px}
+  body{padding:44px 32px 90px;
+    background:
+      radial-gradient(1100px 520px at 10% -14%, #F3F7F5 0%, rgba(243,247,245,0) 62%),
+      radial-gradient(900px 500px at 96% 0%, #EEF2F6 0%, rgba(238,242,246,0) 60%),
+      var(--page)}
+
+  .wrap{max-width:1320px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:40px;
+    padding-bottom:26px;border-bottom:1px solid #D3DAE1;margin-bottom:40px;flex-wrap:wrap}
+  .eyebrow{font-size:10.5px;letter-spacing:2.4px;color:#7A8590;margin-bottom:13px}
+  .head h1{font-size:29px;font-weight:600;letter-spacing:.4px}
+  .head h1 em{font-style:normal;color:var(--accent)}
+  .head p{color:#5C6773;font-size:13.5px;line-height:1.9;margin-top:10px;max-width:680px}
+  .meta{display:flex;gap:26px;font-size:11.5px;color:#78838F;flex-wrap:wrap}
+  .meta b{display:block;color:var(--text-2);font-weight:500;font-size:13px;margin-top:4px}
+
+  .stage{display:grid;grid-template-columns:minmax(0,1240px) 1fr;gap:48px;align-items:start}
+  .stageleft{min-width:0}
+
+  /* ---------- screen switcher ---------- */
+  .screenbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .screenbar .hint{font-size:11px;color:var(--dim);letter-spacing:1px;margin-right:2px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);
+    background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;
+    cursor:pointer;transition:.2s;font-family:inherit}
+  .tab b{font-size:10px;color:var(--dim);font-weight:500;letter-spacing:.5px}
+  .tab:hover{border-color:#B8C4CE;transform:translateY(-1px)}
+  .tab.on{background:var(--accent);border-color:var(--accent);color:#fff;
+    box-shadow:0 6px 16px -8px rgba(14,124,102,.7)}
+  .tab.on b{color:rgba(255,255,255,.7)}
+  .snarrows{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .snarrows .cnt{font-size:11px;color:var(--dim);letter-spacing:1.2px;
+    font-variant-numeric:tabular-nums}
+  .snarrows button{width:27px;height:27px;border-radius:50%;border:1px solid var(--line);
+    background:#fff;color:var(--text-2);cursor:pointer;font-size:14px;line-height:1;
+    display:grid;place-items:center;transition:.2s;font-family:inherit}
+  .snarrows button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  @media (max-width:1800px){ .stage{grid-template-columns:minmax(0,1fr)} .panel{max-width:1240px;min-height:0} }
+
+  /* ---------- window ---------- */
+  .frame{width:100%;max-width:1240px;height:800px;border-radius:12px;overflow:hidden;
+    background:var(--surface);display:flex;flex-direction:column;
+    box-shadow:0 30px 70px -24px rgba(15,26,36,.35),0 0 0 1px #CBD3DB}
+  .titlebar{height:38px;background:#F0F3F6;border-bottom:1px solid #DCE2E8;
+    display:flex;align-items:center;padding:0 14px;gap:7px;flex:none}
+  .tl{width:11px;height:11px;border-radius:50%}
+  .tl.r{background:#F26B5E}.tl.y{background:#F6BE4F}.tl.g{background:#5FC75E}
+  .addr{margin-left:16px;font-size:11px;color:#8C97A3;background:#E6EBF0;
+    border-radius:5px;padding:4px 40px;flex:1;max-width:420px;text-align:center}
+
+  .app{flex:1;display:flex;min-height:0}
+
+  /* sidebar */
+  .side{width:196px;flex:none;background:var(--side);border-right:1px solid var(--line);
+    padding:18px 12px;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:9px;padding:0 8px 20px}
+  .logo{width:26px;height:26px;border-radius:7px;background:var(--accent);
+    color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:-.5px}
+  .brand .n{font-size:13.5px;font-weight:600;letter-spacing:.3px}
+  .brand .s{font-size:9.5px;color:var(--dim);margin-top:2px}
+  .navitem{display:flex;align-items:center;gap:9px;padding:9px 9px;border-radius:7px;
+    font-size:12.5px;color:var(--text-2);margin-bottom:2px;cursor:default}
+  .navitem.on{background:#fff;color:var(--accent);font-weight:500;
+    box-shadow:0 1px 2px rgba(20,40,60,.06),0 0 0 1px #E4EAEF}
+  .navitem .ic{width:15px;text-align:center;opacity:.65;font-size:12px}
+  .navitem.on .ic{opacity:1}
+  .sidefoot{margin-top:auto;padding:12px 9px 0;border-top:1px solid var(--line);
+    font-size:10.5px;color:var(--dim);line-height:1.8}
+  .sidefoot b{color:var(--text-2);font-weight:500;display:block;font-size:11.5px}
+
+  /* main */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:56px;flex:none;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:0 26px;gap:14px}
+  .crumb{font-size:12px;color:var(--dim)}
+  .crumb b{color:var(--text-2);font-weight:500}
+  .grow{flex:1}
+  .btn{font-size:12px;padding:7px 14px;border-radius:7px;border:1px solid var(--line);
+    background:#fff;color:var(--text-2);white-space:nowrap}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .btn.ghost{border-color:transparent;color:var(--dim)}
+
+  .body{flex:1;min-height:0;overflow:hidden;position:relative}
+  .scr{position:absolute;inset:0;padding:24px 26px 22px;opacity:0;pointer-events:none;
+    transition:opacity .3s ease;display:flex;flex-direction:column;min-height:0}
+  .scr.on{opacity:1;pointer-events:auto}
+
+  h2.t{font-size:17px;font-weight:600;letter-spacing:.2px}
+  .sub{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.7}
+
+  /* table */
+  .tbl{width:100%;border-collapse:collapse;margin-top:18px;font-size:12.5px}
+  .tbl th{text-align:left;font-size:10.5px;font-weight:500;color:var(--dim);
+    letter-spacing:.6px;padding:0 10px 10px;border-bottom:1px solid var(--line)}
+  .tbl td{padding:13px 10px;border-bottom:1px solid var(--line-2);color:var(--text-2)}
+  .tbl td.k{color:var(--text);font-weight:500}
+  .tbl tr:hover td{background:#FAFCFD}
+  .pill{display:inline-block;font-size:10.5px;padding:3px 8px;border-radius:20px;
+    background:#EFF3F6;color:#5A6673}
+  .pill.ok{background:var(--accent-soft);color:var(--accent)}
+  .pill.warn{background:var(--amber-soft);color:var(--amber)}
+  .bar-mini{height:4px;border-radius:3px;background:#E7ECF0;width:64px;display:inline-block;
+    vertical-align:middle;overflow:hidden;margin-right:7px}
+  .bar-mini i{display:block;height:100%;background:var(--accent);border-radius:3px}
+
+  .banner{margin-top:18px;border:1px dashed #D2DAE1;border-radius:9px;padding:12px 15px;
+    font-size:11.5px;color:var(--dim);line-height:1.75;background:#FBFCFD}
+  .banner b{color:var(--text-2);font-weight:500}
+
+  /* S2 grading */
+  .grade{display:grid;grid-template-columns:180px 1fr 268px;gap:0;flex:1;min-height:0;
+    margin:-24px -26px -22px}
+  .studlist{border-right:1px solid var(--line);overflow:hidden;padding:18px 0}
+  .studlist .h{font-size:10.5px;color:var(--dim);letter-spacing:.6px;padding:0 16px 10px}
+  .stud{display:flex;align-items:center;gap:9px;padding:8px 16px;font-size:12px;color:var(--text-2)}
+  .stud .av{width:22px;height:22px;border-radius:50%;background:#E8EDF1;color:#5B6774;
+    display:grid;place-items:center;font-size:10px;flex:none}
+  .stud.on{background:#EFF6F4;color:var(--accent);font-weight:500;border-left:2px solid var(--accent);padding-left:14px}
+  .stud .st{margin-left:auto;font-size:9.5px;color:#A2ACB6}
+  .stud .st.done{color:var(--accent)}
+
+  .sheet{padding:20px 24px;overflow:hidden}
+  .qhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .qno{font-size:11px;background:#EFF3F6;color:#5A6673;border-radius:5px;padding:3px 8px}
+  .qtype{font-size:10.5px;color:var(--dim)}
+  .qtext{font-size:13.5px;line-height:2.05;color:var(--text);max-width:560px}
+  .options{margin-top:16px;display:flex;flex-direction:column;gap:8px;max-width:560px}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border:1px solid var(--line);
+    border-radius:8px;font-size:12.5px;line-height:1.7;color:var(--text-2);background:#fff}
+  .opt .l{width:17px;height:17px;border-radius:50%;border:1px solid #CBD3DB;color:#7C8794;
+    display:grid;place-items:center;font-size:10px;flex:none;margin-top:1px}
+  .opt.pick{border-color:#E7B9B4;background:#FDF5F4}
+  .opt.pick .l{border-color:var(--rose);color:var(--rose);background:#FBEAE8}
+  .opt.right{border-color:#A9D8C9;background:#F2FAF7}
+  .opt.right .l{border-color:var(--accent);color:#fff;background:var(--accent)}
+  .tagwrong{margin-left:auto;font-size:10px;color:var(--rose);flex:none;padding-top:2px}
+  .tagright{margin-left:auto;font-size:10px;color:var(--accent);flex:none;padding-top:2px}
+
+  .aiPanel{border-left:1px solid var(--line);background:#FAFBFC;padding:20px 20px;display:flex;
+    flex-direction:column;overflow:hidden}
+  .aiPanel .h{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--dim);
+    letter-spacing:.5px;margin-bottom:16px}
+  .aiPanel .h i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .diagbox{border:1px solid var(--line);border-radius:9px;background:#fff;padding:14px;margin-bottom:12px}
+  .diagbox .lab{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:8px}
+  .diagbox .val{font-size:14px;font-weight:600;color:var(--text);letter-spacing:.2px}
+  .diagbox .conf{font-size:10.5px;color:var(--dim);margin-top:7px}
+  .confbar{height:3px;border-radius:2px;background:#E7ECF0;margin-top:7px;overflow:hidden}
+  .confbar i{display:block;height:100%;background:var(--accent);width:82%}
+  .why{font-size:11.5px;line-height:1.85;color:var(--text-2);background:#F4F7F9;
+    border-radius:8px;padding:11px 12px;margin-bottom:14px}
+  .why b{color:var(--text);font-weight:500}
+  .actions{display:flex;gap:8px;margin-top:auto}
+  .actions .btn{flex:1;text-align:center;font-size:11.5px;padding:8px 6px}
+  .chip{display:inline-block;font-size:10.5px;padding:4px 9px;border-radius:6px;
+    background:#EEF2F5;color:#5A6673}
+  .chip.bad{background:#FBEDEA;color:#B4413A}
+  .chip.good{background:#E9F5F1;color:var(--accent)}
+  .gate{margin-top:12px;font-size:10px;color:var(--dim);line-height:1.7;
+    border-top:1px solid var(--line);padding-top:11px}
+  .gate b{color:var(--accent);font-weight:500}
+
+  /* S3 diagnosis */
+  .diagHead{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .avatar{width:44px;height:44px;border-radius:50%;background:#E6EDF2;color:#4C5A67;
+    display:grid;place-items:center;font-size:15px;font-weight:500}
+  .diagHead .nm{font-size:15px;font-weight:600}
+  .diagHead .sc{font-size:11.5px;color:var(--dim);margin-top:4px}
+  .diagHead .score{margin-left:auto;text-align:right}
+  .diagHead .score b{font-size:24px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+  .diagHead .score span{font-size:11px;color:var(--dim)}
+
+  .claim{margin-top:18px;background:#F3F9F7;border:1px solid #CDE7DF;border-radius:10px;
+    padding:16px 18px}
+  .claim .t{font-size:14.5px;font-weight:600;color:#0B5F4F;line-height:1.6}
+  .claim .d{font-size:11.5px;color:#4B7A6F;margin-top:7px;line-height:1.7}
+
+  .cols{display:grid;grid-template-columns:1fr 300px;gap:22px;margin-top:18px;flex:1;min-height:0}
+  .evi{display:flex;flex-direction:column;gap:0}
+  .evi .h{font-size:10.5px;color:var(--dim);letter-spacing:.6px;margin-bottom:11px}
+  .ev{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2)}
+  .ev .no{width:20px;height:20px;border-radius:50%;background:#EFF3F6;color:#6B7683;
+    display:grid;place-items:center;font-size:10px;flex:none;margin-top:1px}
+  .ev .x{font-size:12px;line-height:1.8;color:var(--text-2)}
+  .ev .x b{color:var(--text);font-weight:500}
+  .ev .x .m{display:block;font-size:10.5px;color:var(--dim);margin-top:3px}
+
+  .prereq{border:1px solid var(--line);border-radius:10px;padding:15px;height:fit-content}
+  .prereq .h{font-size:10.5px;color:var(--dim);letter-spacing:.6px;margin-bottom:12px}
+  .pk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);padding:6px 0}
+  .pk .d{width:6px;height:6px;border-radius:50%;flex:none}
+  .pk .d.bad{background:var(--rose)}
+  .pk .d.warn{background:var(--amber)}
+  .pk .d.ok{background:var(--accent)}
+  .pk .v{margin-left:auto;font-size:10px;color:var(--dim)}
+  .nextbox{margin-top:14px;padding-top:13px;border-top:1px solid var(--line-2)}
+  .nextbox .l{font-size:10.5px;color:var(--dim);margin-bottom:7px}
+  .nextbox .v{font-size:12px;line-height:1.8;color:var(--text)}
+
+  /* S4 report */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+  .kpi{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi .l{font-size:10.5px;color:var(--dim);letter-spacing:.4px}
+  .kpi .v{font-size:23px;font-weight:600;margin-top:7px;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+  .kpi .v small{font-size:11px;font-weight:400;color:var(--dim);margin-left:3px}
+  .kpi .d{font-size:10.5px;color:var(--dim);margin-top:5px}
+  .kpi .d.up{color:var(--ok)}
+
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px;flex:1;min-height:0}
+  .chart{border:1px solid var(--line);border-radius:10px;padding:16px 18px 14px;min-height:0}
+  .chart .h{font-size:11.5px;font-weight:500;color:var(--text);margin-bottom:3px}
+  .chart .s{font-size:10.5px;color:var(--dim);margin-bottom:16px}
+
+  .hbars{display:flex;flex-direction:column;gap:13px}
+  .hb{display:grid;grid-template-columns:74px 1fr 34px;gap:10px;align-items:center}
+  .hb .lb{font-size:11px;color:var(--text-2);text-align:right}
+  .hb .track{height:16px;background:#F1F4F7;border-radius:3px;overflow:hidden}
+  .hb .fill{height:100%;border-radius:3px}
+  .hb .vl{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+
+  .bullets{display:flex;flex-direction:column;gap:15px;margin-top:2px}
+  .bl{display:grid;grid-template-columns:86px 1fr 30px;gap:10px;align-items:center}
+  .bl .lb{font-size:11px;color:var(--text-2)}
+  .bl .track{position:relative;height:9px;background:#F1F4F7;border-radius:5px}
+  .bl .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#93A3B1}
+  .bl .fill.lo{background:#D98A73}
+  .bl .tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:#59646F;opacity:.45}
+  .bl .vl{font-size:10.5px;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+
+  .legend{display:flex;gap:14px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line-2);
+    font-size:10px;color:var(--dim);flex-wrap:wrap}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+  /* S5 AI question */
+  .qgen{display:grid;grid-template-columns:1fr 320px;gap:22px;flex:1;min-height:0;margin-top:18px}
+  .promptbox{border:1px solid #CFE2DC;background:#F5FBF9;border-radius:10px;padding:14px 16px;
+    font-size:12.5px;line-height:1.8;color:#0B5F4F}
+  .promptbox .lb{font-size:10px;color:#5C8A7E;letter-spacing:.6px;margin-bottom:7px}
+  .genlist{margin-top:14px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+  .gq{border:1px solid var(--line);border-radius:8px;padding:10px 13px;background:#fff}
+  .gq .top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .gq .n{font-size:10.5px;color:var(--dim)}
+  .gq .lv{font-size:9.5px;padding:2px 6px;border-radius:10px;background:#EFF3F6;color:#65717E}
+  .gq .q{font-size:11.5px;line-height:1.75;color:var(--text-2)}
+
+  .review{border:1px solid var(--line);border-radius:10px;padding:16px;background:#FAFBFC;display:flex;flex-direction:column}
+  .review .h{font-size:11px;color:var(--dim);letter-spacing:.5px;margin-bottom:14px}
+  .rv{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--line-2)}
+  .rv:last-of-type{border-bottom:none}
+  .rv .ck{width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;
+    display:grid;place-items:center;font-size:9px;flex:none;margin-top:1px}
+  .rv .ck.warn{background:var(--amber)}
+  .rv .ck.off{background:#E3E8ED;color:#7A8590}
+  .reviewnote{margin-top:12px;padding-top:11px;border-top:1px dashed #D3DAE1;
+    font-size:10px;line-height:1.75;color:#7A8590}
+  .rv .x{font-size:11.5px;color:var(--text);line-height:1.6}
+  .rv .x .s{display:block;font-size:10px;color:var(--dim);margin-top:2px;line-height:1.6}
+  .review .acts{margin-top:auto;display:flex;gap:8px;padding-top:14px}
+
+  .navdots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    display:flex;gap:7px;z-index:20}
+  .dot{width:6px;height:6px;border-radius:50%;background:#D2DAE1;cursor:pointer;
+    transition:.25s;border:none;padding:0}
+  .dot.on{background:var(--accent);width:16px;border-radius:3px}
+
+  /* ---------- panel ---------- */
+  .panel{min-height:0}
+  .ptag{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:1.5px;
+    color:#7A8590;margin-bottom:14px}
+  .ptag b{color:var(--accent);font-weight:500}
+  .panel h2{font-size:22px;font-weight:600;letter-spacing:.2px;margin-bottom:18px;line-height:1.5}
+  .panel .lead{font-size:13.5px;line-height:2.05;color:#4B5763;margin-bottom:26px}
+  .panel .lead b{color:var(--text);font-weight:500}
+  .kv{border-top:1px solid #D3DAE1}
+  .kv .row{padding:18px 0;border-bottom:1px solid #E1E7EC;display:grid;
+    grid-template-columns:118px 1fr;gap:20px}
+  .kv .k{font-size:11.5px;color:#7A8590;letter-spacing:.4px;padding-top:2px}
+  .kv .v{font-size:13px;line-height:1.95;color:#4B5763}
+  .kv .v b{color:var(--text);font-weight:500}
+  .metrics{display:flex;margin-top:28px;border:1px solid #D3DAE1;border-radius:12px;
+    overflow:hidden;background:#fff}
+  .metric{flex:1;padding:17px 15px;border-right:1px solid #E4EAEF}
+  .metric:last-child{border-right:none}
+  .metric .num{font-size:20px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+  .metric .lab{font-size:10.5px;color:#7A8590;margin-top:7px;line-height:1.6}
+
+  .overview{margin-top:56px;padding:30px 32px 28px;border:1px solid #D3DAE1;border-radius:16px;
+    background:linear-gradient(180deg,#FFFFFF 0%,#F8FAFB 100%);
+    box-shadow:0 24px 50px -40px rgba(15,26,36,.35)}
+  .ovhead{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
+  .ovtag{font-size:10px;letter-spacing:2px;color:#8A95A0;margin-bottom:10px}
+  .ovhead h2{font-size:20px;font-weight:600;margin-bottom:9px}
+  .ovhead .sub{font-size:12.5px;color:#5C6773;line-height:1.9;max-width:800px}
+  .ovbadge{margin-left:auto;display:flex;align-items:baseline;gap:7px;padding:9px 15px;
+    border:1px solid #D3DAE1;border-radius:10px;background:#fff}
+  .ovbadge b{font-size:22px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+  .ovbadge span{font-size:10.5px;color:#7A8590;letter-spacing:.5px}
+
+  .loop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:24px 0 28px}
+  .loop .st{font-size:11.5px;color:#3D4753;background:#fff;border:1px solid #D3DAE1;
+    border-radius:8px;padding:8px 13px}
+  .loop .st b{color:var(--accent);font-weight:500;margin-right:6px;font-size:10px}
+  .loop .ar{color:#AEB8C2;font-size:12px}
+  .loop .st.off{color:#98A3AE;border-style:dashed;background:transparent}
+
+  .cuthead{font-size:10.5px;letter-spacing:1.5px;color:#8A95A0;margin-bottom:12px}
+  .cut{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .cutcard{border:1px solid #E2E7EC;border-radius:10px;padding:16px 18px 18px;background:#fff}
+  .cutcard .n{font-size:10px;color:#98A3AE;letter-spacing:1px;margin-bottom:10px}
+  .cutcard .t{font-size:13px;font-weight:600;margin-bottom:7px}
+  .cutcard .d{font-size:11.5px;color:#5C6773;line-height:1.8}
+  .cutcard .d em{font-style:normal;color:var(--accent);font-weight:500}
+  .evidence{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;margin-top:20px;
+    padding-top:16px;border-top:1px solid #EDF1F4}
+  .evidence .evh{font-size:10px;letter-spacing:1.5px;color:#8A95A0;margin-right:6px}
+  .evidence span{font-size:11px;color:#5C6773}
+  .evidence b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+
+  .datanote{margin-top:14px;padding-top:12px;border-top:1px solid #EDF1F4;
+    font-size:10.5px;color:#8A95A0;line-height:1.8}
+  .datanote b{color:#5C6773;font-weight:500}
+  @media (max-width:820px){ .cut{grid-template-columns:1fr} .ovbadge{margin-left:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <div class="eyebrow">AI 教学 AGENT · 桌面端原型</div>
+      <h1>ChemAI <em>智辅化学</em> · 面向高中化学教师的 AI 教学 Agent 平台</h1>
+      <p>不只给"统计"和"答案"，回答"这个学生为什么错"。<br>本原型展示教师侧最小闭环 5 屏——点上方屏幕标签，或按 ← → 键切换。</p>
+    </div>
+    <div class="meta">
+      <div>角色<b>独立开发 / 产品 + 全栈</b></div>
+      <div>周期<b>2026.04 – 2026.08</b></div>
+      <div>形态<b>桌面端 · 教师侧</b></div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="stageleft">
+      <div class="screenbar">
+        <span class="hint">5 屏原型</span>
+        <div class="tabs" id="tabs">
+          <button class="tab on" onclick="go(0)"><b>01</b>考试</button>
+          <button class="tab" onclick="go(1)"><b>02</b>批改</button>
+          <button class="tab" onclick="go(2)"><b>03</b>障碍诊断</button>
+          <button class="tab" onclick="go(3)"><b>04</b>班级报告</button>
+          <button class="tab" onclick="go(4)"><b>05</b>AI 出题</button>
+        </div>
+        <div class="snarrows">
+          <span class="cnt" id="cnt">01 / 05</span>
+          <button onclick="go(cur-1)" aria-label="上一屏">‹</button>
+          <button onclick="go(cur+1)" aria-label="下一屏">›</button>
+        </div>
+      </div>
+
+      <div class="frame">
+      <div class="titlebar">
+        <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
+        <div class="addr">chemai.local / 高二(3)班 / 期中考试</div>
+      </div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">
+            <div class="logo">C</div>
+            <div><div class="n">ChemAI</div><div class="s">智辅化学 · 教师端</div></div>
+          </div>
+          <div class="navitem on"><span class="ic">▤</span>考试</div>
+          <div class="navitem"><span class="ic">◫</span>批改</div>
+          <div class="navitem"><span class="ic">◈</span>障碍诊断</div>
+          <div class="navitem"><span class="ic">▦</span>班级报告</div>
+          <div class="navitem"><span class="ic">✦</span>AI 出题</div>
+          <div class="navitem"><span class="ic">◇</span>题库</div>
+          <div class="sidefoot">
+            <b>高二(3)班</b>
+            48 人 · 化学 · 必修二
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <div class="crumb">考试 / <b>期中考试 · 化学</b></div>
+            <div class="grow"></div>
+            <div class="btn ghost">导出</div>
+            <div class="btn primary">新建考试</div>
+          </div>
+
+          <div class="body">
+
+            <!-- S1 -->
+            <section class="scr on">
+              <h2 class="t">期中考试 · 化学</h2>
+              <div class="sub">2026-04-18 · 满分 100 · 48 人 · 已收卷 48 / 48</div>
+
+              <table class="tbl">
+                <thead><tr>
+                  <th style="width:26%">环节</th><th style="width:18%">状态</th>
+                  <th style="width:16%">完成度</th><th>说明</th><th style="width:90px"></th>
+                </tr></thead>
+                <tbody>
+                  <tr><td class="k">收作答</td><td><span class="pill ok">已完成</span></td>
+                    <td><span class="bar-mini"><i style="width:100%"></i></span>48/48</td>
+                    <td>答题卡录入</td><td><span class="pill">查看</span></td></tr>
+                  <tr><td class="k">批改</td><td><span class="pill warn">进行中</span></td>
+                    <td><span class="bar-mini"><i style="width:25%"></i></span>12/48</td>
+                    <td>AI 已给建议，待教师确认</td><td><span class="pill ok">继续</span></td></tr>
+                  <tr><td class="k">障碍诊断</td><td><span class="pill">待开始</span></td>
+                    <td><span class="bar-mini"><i style="width:0"></i></span>—</td>
+                    <td>批改完成后开放</td><td><span class="pill">—</span></td></tr>
+                  <tr><td class="k">班级报告</td><td><span class="pill">待开始</span></td>
+                    <td><span class="bar-mini"><i style="width:0"></i></span>—</td>
+                    <td>依赖诊断结果</td><td><span class="pill">—</span></td></tr>
+                </tbody>
+              </table>
+
+              <div class="banner">
+                <b>这个产品没有「拍照上传试卷」的入口。</b>OCR 真卡实测答案落对率仅 18.8%，未达标即搁置、不合并——
+                宁可让教师手动录入，也不交付一个会悄悄读错的入口。
+              </div>
+
+              <div style="margin-top:24px;display:flex;align-items:center;margin-bottom:4px">
+                <div style="font-size:12.5px;font-weight:500">本学期其他考试</div>
+                <div style="margin-left:auto;font-size:11px;color:var(--dim)">查看全部 ›</div>
+              </div>
+              <table class="tbl">
+                <tbody>
+                  <tr><td class="k" style="width:26%">第一次月考 · 化学</td><td style="width:16%">2026-03-21</td>
+                    <td style="width:14%"><span class="pill ok">已完成</span></td>
+                    <td>平均 68.2 · 7 人已生成个别诊断</td><td style="width:90px"><span class="pill">查看报告</span></td></tr>
+                  <tr><td class="k">单元测 · 离子反应</td><td>2026-03-07</td>
+                    <td><span class="pill ok">已完成</span></td>
+                    <td>平均 74.1 · 报告已归档</td><td><span class="pill">查看报告</span></td></tr>
+                  <tr><td class="k">开学摸底 · 化学</td><td>2026-02-20</td>
+                    <td><span class="pill ok">已完成</span></td>
+                    <td>平均 65.8 · 报告已归档</td><td><span class="pill">查看报告</span></td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <!-- S2 -->
+            <section class="scr">
+              <div class="grade">
+                <div class="studlist">
+                  <div class="h">学生 · 12 / 48 已确认</div>
+                  <div class="stud"><div class="av">陈</div>陈思远<span class="st done">✓</span></div>
+                  <div class="stud on"><div class="av">李</div>李佳怡<span class="st">…</span></div>
+                  <div class="stud"><div class="av">王</div>王浩然<span class="st">…</span></div>
+                  <div class="stud"><div class="av">张</div>张若曦<span class="st">…</span></div>
+                  <div class="stud"><div class="av">刘</div>刘一鸣<span class="st">…</span></div>
+                  <div class="stud"><div class="av">赵</div>赵子涵<span class="st">…</span></div>
+                  <div class="stud"><div class="av">周</div>周雨桐<span class="st">…</span></div>
+                </div>
+
+                <div class="sheet">
+                  <div class="qhead">
+                    <span class="qno">第 17 题</span>
+                    <span class="qtype">单选题 · 4 分 · 氧化还原反应</span>
+                  </div>
+                  <div class="qtext">
+                    下列反应中，属于氧化还原反应的是（ ）
+                  </div>
+                  <div class="options">
+                    <div class="opt"><span class="l">A</span>CaCO₃ → CaO + CO₂↑</div>
+                    <div class="opt pick"><span class="l">B</span>Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂↑
+                      <span class="tagwrong">学生所选</span></div>
+                    <div class="opt right"><span class="l">C</span>2Na + Cl₂ → 2NaCl
+                      <span class="tagright">正确答案</span></div>
+                    <div class="opt"><span class="l">D</span>NaOH + HCl → NaCl + H₂O</div>
+                  </div>
+                </div>
+
+                <aside class="aiPanel">
+                  <div class="h"><i></i>AI 判定建议</div>
+
+                  <div class="diagbox">
+                    <div class="lab">错因分类</div>
+                    <div class="val">概念混淆</div>
+                    <div class="conf">置信度 0.82 · 基于选项特征与同类型题表现</div>
+                    <div class="confbar"><i></i></div>
+                  </div>
+
+                  <div class="why">
+                    学生选择 <b>B（复分解反应）</b>，说明把"有气体生成"误当成氧化还原的判断标准；
+                    未识别 C 选项中 <b>Na⁰ → Na⁺¹</b> 的化合价升降。
+                  </div>
+
+                  <div class="diagbox" style="margin-top:12px">
+                    <div class="lab">该生同类型题表现</div>
+                    <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
+                      <span class="chip bad">第 12 题 ✕</span>
+                      <span class="chip bad">第 17 题 ✕</span>
+                      <span class="chip good">第 21 题 ✓</span>
+                    </div>
+                    <div class="conf" style="margin-top:9px">同类型 3 题错 2 题 · 错误位置一致</div>
+                  </div>
+
+                  <div class="actions">
+                    <div class="btn primary">采纳</div>
+                    <div class="btn">修改</div>
+                    <div class="btn">忽略</div>
+                  </div>
+
+                  <div class="gate">
+                    <b>审批门控：</b>AI 不会自动写入批改结果。每一条判定都需要教师确认后才入库，
+                    并记录确认人。Agent 的 5 个工具全部经此门控调用。
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            <!-- S3 -->
+            <section class="scr">
+              <div class="diagHead">
+                <div class="avatar">李</div>
+                <div>
+                  <div class="nm">李佳怡</div>
+                  <div class="sc">高二(3)班 · 本次 62 / 100 · 班级排名 31 / 48</div>
+                </div>
+                <div class="score"><b>62</b><span> / 100</span></div>
+              </div>
+
+              <div class="claim">
+                <div class="t">不是不会做题，是把两个概念放进了同一个抽屉。</div>
+                <div class="d">本次 8 道错题中，5 道指向同一个前序知识点：化合价升降的判断。其余 3 道为计算与审题，可单独补。</div>
+              </div>
+
+              <div class="cols">
+                <div class="evi">
+                  <div class="h">证据链 · 三条独立来源相互印证</div>
+                  <div class="ev"><div class="no">1</div><div class="x">
+                    <b>第 17 题选了 B（复分解），正确项 C（氧化还原）</b>
+                    <span class="m">错在判断标准，不在计算</span></div></div>
+                  <div class="ev"><div class="no">2</div><div class="x">
+                    <b>同类型 3 题错 2 题</b>，且两次都错在"判断反应类型"这一步
+                    <span class="m">第 12、17、21 题 · 错误位置一致</span></div></div>
+                  <div class="ev"><div class="no">3</div><div class="x">
+                    <b>上月月考第 9 题同错</b>，当时判为"不会"，本次复核为"混淆"
+                    <span class="m">跨考试一致性 · 排除偶然失误</span></div></div>
+                </div>
+
+                <aside class="prereq">
+                  <div class="h">前序知识点归因</div>
+                  <div class="pk"><span class="d bad"></span>化合价升降判断<span class="v">未掌握</span></div>
+                  <div class="pk"><span class="d warn"></span>氧化剂 / 还原剂识别<span class="v">不稳定</span></div>
+                  <div class="pk"><span class="d ok"></span>化学方程式配平<span class="v">已掌握</span></div>
+                  <div class="pk"><span class="d ok"></span>离子方程式书写<span class="v">已掌握</span></div>
+
+                  <div class="nextbox">
+                    <div class="l">建议动作</div>
+                    <div class="v">不用刷题。用 15 分钟重建「化合价升降」判断，
+                      再回做这 3 道原题即可验证。</div>
+                  </div>
+                </aside>
+              </div>
+
+              <div style="margin-top:16px;border:1px solid var(--line);border-radius:10px;
+                padding:14px 16px;display:flex;align-items:center;gap:16px;background:#FBFCFD">
+                <div>
+                  <div style="font-size:10.5px;color:var(--dim);letter-spacing:.5px">建议验证 · 3 道原题</div>
+                  <div style="font-size:11.5px;color:var(--text-2);margin-top:6px">
+                    第 12、17、21 题 · 同一前序知识点，做完即可确认是否补上，不用另找题库。</div>
+                </div>
+                <div class="btn primary" style="margin-left:auto;white-space:nowrap">生成练习单</div>
+              </div>
+            </section>
+
+            <!-- S4 -->
+            <section class="scr">
+              <div style="display:flex;align-items:flex-end">
+                <div>
+                  <h2 class="t">高二(3)班 · 期中考试报告</h2>
+                  <div class="sub">48 人 · 2026-04-18 · 生成于批改确认后</div>
+                </div>
+                <div style="margin-left:auto" class="btn">导出 PDF</div>
+              </div>
+
+              <div class="kpis">
+                <div class="kpi"><div class="l">平均分</div><div class="v">71.4<small>/100</small></div>
+                  <div class="d up">↑ 3.2 较上次</div></div>
+                <div class="kpi"><div class="l">及格率</div><div class="v">79<small>%</small></div>
+                  <div class="d">38 / 48 人</div></div>
+                <div class="kpi"><div class="l">最薄弱知识点</div><div class="v" style="font-size:16px">氧化还原</div>
+                  <div class="d">得分率 51%</div></div>
+                <div class="kpi"><div class="l">需干预学生</div><div class="v">7<small>人</small></div>
+                  <div class="d">已生成个别诊断</div></div>
+              </div>
+
+              <div class="charts">
+                <div class="chart">
+                  <div class="h">错因分布</div>
+                  <div class="s">43 道错题 · 按首次错误位置归类</div>
+                  <div class="hbars">
+                    <div class="hb"><div class="lb">概念混淆</div>
+                      <div class="track"><div class="fill" style="width:44%;background:#B45309"></div></div>
+                      <div class="vl">19</div></div>
+                    <div class="hb"><div class="lb">计算失误</div>
+                      <div class="track"><div class="fill" style="width:30%;background:#2563EB"></div></div>
+                      <div class="vl">13</div></div>
+                    <div class="hb"><div class="lb">前序缺失</div>
+                      <div class="track"><div class="fill" style="width:19%;background:#7C3AED"></div></div>
+                      <div class="vl">8</div></div>
+                    <div class="hb"><div class="lb">审题偏差</div>
+                      <div class="track"><div class="fill" style="width:7%;background:#BE123C"></div></div>
+                      <div class="vl">3</div></div>
+                  </div>
+                  <div class="legend">
+                    <span><i style="background:#B45309"></i>概念混淆 44%</span>
+                    <span><i style="background:#2563EB"></i>计算失误 30%</span>
+                    <span><i style="background:#7C3AED"></i>前序缺失 19%</span>
+                    <span><i style="background:#BE123C"></i>审题偏差 7%</span>
+                  </div>
+                </div>
+
+                <div class="chart">
+                  <div class="h">知识点掌握度</div>
+                  <div class="s">得分率 · 竖线为年级目标线 70%</div>
+                  <div class="bullets">
+                    <div class="bl"><div class="lb">氧化还原</div>
+                      <div class="track"><div class="fill lo" style="width:51%"></div><div class="tick" style="left:70%"></div></div>
+                      <div class="vl">51%</div></div>
+                    <div class="bl"><div class="lb">离子反应</div>
+                      <div class="track"><div class="fill" style="width:68%"></div><div class="tick" style="left:70%"></div></div>
+                      <div class="vl">68%</div></div>
+                    <div class="bl"><div class="lb">化学平衡</div>
+                      <div class="track"><div class="fill" style="width:74%"></div><div class="tick" style="left:70%"></div></div>
+                      <div class="vl">74%</div></div>
+                    <div class="bl"><div class="lb">电化学</div>
+                      <div class="track"><div class="fill" style="width:79%"></div><div class="tick" style="left:70%"></div></div>
+                      <div class="vl">79%</div></div>
+                    <div class="bl"><div class="lb">物质结构</div>
+                      <div class="track"><div class="fill" style="width:86%"></div><div class="tick" style="left:70%"></div></div>
+                      <div class="vl">86%</div></div>
+                  </div>
+                  <div class="legend">
+                    <span><i style="background:#D98A73"></i>低于目标线</span>
+                    <span><i style="background:#93A3B1"></i>达标</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:14px">
+                <div style="display:flex;align-items:center;margin-bottom:9px">
+                  <div style="font-size:12px;font-weight:500">需干预学生 · 7 人</div>
+                  <div style="margin-left:auto;font-size:10.5px;color:var(--dim)">已全部生成个别诊断 ›</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+                  <div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px">
+                    <div style="font-size:11.5px;font-weight:500">李佳怡 <span style="font-weight:400;color:var(--dim)">62</span></div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:4px">概念混淆 · 化合价升降</div></div>
+                  <div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px">
+                    <div style="font-size:11.5px;font-weight:500">王浩然 <span style="font-weight:400;color:var(--dim)">58</span></div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:4px">前序缺失 · 离子方程式</div></div>
+                  <div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px">
+                    <div style="font-size:11.5px;font-weight:500">张若曦 <span style="font-weight:400;color:var(--dim)">61</span></div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:4px">概念混淆 · 氧化还原</div></div>
+                  <div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px">
+                    <div style="font-size:11.5px;font-weight:500">刘一鸣 <span style="font-weight:400;color:var(--dim)">63</span></div>
+                    <div style="font-size:10px;color:var(--dim);margin-top:4px">计算失误为主 · 可单独补</div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- S5 -->
+            <section class="scr">
+              <div style="display:flex;align-items:flex-end">
+                <div>
+                  <h2 class="t">AI 出题 · 电化学单元测</h2>
+                  <div class="sub">生成后先过四维审核：配平硬阻断、其余三维软告警；入库以教师逐题确认为准</div>
+                </div>
+              </div>
+
+              <div class="qgen">
+                <div>
+                  <div class="promptbox">
+                    <div class="lb">出题指令</div>
+                    出 5 道电化学单选题，难度中等，覆盖「原电池 / 电解池 / 电极反应式」，
+                    每题 4 个选项且只有 1 个正确。
+                  </div>
+
+                  <div class="genlist">
+                    <div class="gq">
+                      <div class="top"><span class="n">第 1 题</span><span class="lv">中等 · 原电池</span></div>
+                      <div class="q">关于铜锌原电池（稀硫酸），下列说法正确的是（ ）</div>
+                    </div>
+                    <div class="gq">
+                      <div class="top"><span class="n">第 2 题</span><span class="lv">中等 · 电解池</span></div>
+                      <div class="q">电解饱和食盐水时，阳极区产生的气体是（ ）</div>
+                    </div>
+                    <div class="gq">
+                      <div class="top"><span class="n">第 3 题</span><span class="lv">中等 · 电极反应式</span></div>
+                      <div class="q">碱性氢氧燃料电池负极反应式书写正确的是（ ）</div>
+                    </div>
+                    <div class="gq">
+                      <div class="top"><span class="n">第 4 题</span><span class="lv">中等 · 原电池</span></div>
+                      <div class="q">下列装置中，能将化学能直接转化为电能的是（ ）</div>
+                    </div>
+                    <div class="gq">
+                      <div class="top"><span class="n">第 5 题</span><span class="lv">中等 · 电解池</span></div>
+                      <div class="q">用惰性电极电解 CuCl₂ 溶液，阴极产物为（ ）</div>
+                    </div>
+                  </div>
+                </div>
+
+                <aside class="review">
+                  <div class="h">四维化学审核 · 5 题</div>
+                  <div class="rv"><div class="ck">✓</div><div class="x">系数配平
+                    <span class="s">硬阻断 · 2 道含方程式的题全部通过</span></div></div>
+                  <div class="rv"><div class="ck warn">!</div><div class="x">反应条件
+                    <span class="s">软告警 · 第 3 题条件表述建议复核</span></div></div>
+                  <div class="rv"><div class="ck">✓</div><div class="x">产物稳定性
+                    <span class="s">软告警 · 无异常</span></div></div>
+                  <div class="rv"><div class="ck off">–</div><div class="x">分子结构
+                    <span class="s">不适用 · 本题组无结构题</span></div></div>
+                  <div class="reviewnote">
+                    概念型选择题没有可审的方程式内容。审核是信号，不是闸门——入库以教师逐题确认为准。
+                  </div>
+                  <div class="acts">
+                    <div class="btn primary" style="flex:1;text-align:center">逐题确认入库</div>
+                    <div class="btn" style="flex:1;text-align:center">退回重出</div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /stageleft -->
+
+    <aside class="panel" id="panel"></aside>
+  </div>
+
+  <section class="overview">
+    <div class="ovhead">
+      <div>
+        <div class="ovtag">范围控制 · SCOPE</div>
+        <h2>主动范围裁剪：这一期只做教师侧最小闭环</h2>
+        <p class="sub">建考试 → 收作答 → 批改 → 障碍诊断 → 班级报告。不追求产品四环（OCR 批改 → 障碍诊断 → 自适应练习 → 间隔复习）的全集，本期只交付教师侧前半环，也不做学生端。</p>
+      </div>
+      <div class="ovbadge"><b>3</b><span>处刻意不做</span></div>
+    </div>
+
+    <div class="loop">
+      <span class="st"><b>01</b>建考试</span><span class="ar">→</span>
+      <span class="st"><b>02</b>收作答</span><span class="ar">→</span>
+      <span class="st"><b>03</b>批改</span><span class="ar">→</span>
+      <span class="st"><b>04</b>障碍诊断</span><span class="ar">→</span>
+      <span class="st"><b>05</b>班级报告</span>
+    </div>
+
+    <div class="cuthead">刻意不做的三件事</div>
+    <div class="cut">
+      <div class="cutcard">
+        <div class="n">裁剪 01</div>
+        <div class="t">不做试卷 OCR</div>
+        <div class="d">真卡实测答案落对率 <em>18.8%</em>，未达标即搁置、不合并。
+          宁可让教师手动录入，也不交付一个会悄悄读错的入口。</div>
+      </div>
+      <div class="cutcard">
+        <div class="n">裁剪 02</div>
+        <div class="t">不做学生端</div>
+        <div class="d">先解决教师最痛的一环：一次考后错因分析 <em>6–10 小时</em>。
+          学生端与家长端目前仅有 HTML 原型，后端为 0 字节占位，本期不交付。</div>
+      </div>
+      <div class="cutcard">
+        <div class="n">裁剪 03</div>
+        <div class="t">不交付未完成页面</div>
+        <div class="d">未交付的页面不渲染假入口。教师看到的每一个按钮背后都有真实实现，
+          避免「点了没反应」消耗信任。</div>
+      </div>
+    </div>
+
+    <div class="evidence">
+      <div class="evh">工程证据</div>
+      <span><b>20</b> 个归档变更 · <b>36</b> 篇 ADR</span>
+      <span><b>32</b> ORM / <b>34</b> 表 · <b>43</b> 个 API</span>
+      <span><b>1,538</b> 个 pytest</span>
+      <span><b>288</b> 项前端探针</span>
+      <span><b>5</b> 个真实工具 · 20 个未实现不注册</span>
+    </div>
+
+    <div class="datanote">
+      <b>数据说明：</b>界面中的班级、学生、分数与题目为演示数据；80 项教师闭环、39 项 Agent 验收、33/33 AI 出题与 OCR 18.8% 来自项目实测记录。
+    </div>
+  </section>
+
+</div>
+
+<script>
+const panels = [
+  {
+    tag:"01", title:"考试：把四个环节摊开，而不是藏进一个按钮",
+    lead:"教师真正的任务不是「批改」，是<b>从一份卷子里找出每个学生错在哪</b>。所以主页不是任务列表，是这条链路的进度视图——哪一环卡住，一眼可见。",
+    rows:[
+      ["为什么是四个环节","收作答 → 批改 → 障碍诊断 → 班级报告，每一步都依赖上一步的结果。把依赖关系画出来，教师才知道现在该做什么。"],
+      ["没有 OCR 入口","实测答案落对率 18.8%。产品判断不是「先上了再优化」，而是<b>未达标即搁置、不合并</b>——错误的入口比没有入口更伤信任。"],
+      ["状态用颜色不用文案","进行中 / 已完成 / 待开始 三态，配合完成度条，避免教师反复点进去确认。"]
+    ],
+    metrics:[["6–10 h","教师一次考后错因分析耗时<br>（本产品要解决的核心痛点）"],["30 万","全国高中化学教师"],["5 环节","本期最小闭环<br>主动不做四环全集"]]
+  },
+  {
+    tag:"02", title:"批改：AI 只给建议，写入权在教师手里",
+    lead:"这一屏是整个产品的信任基础。<b>AI 判定再好，也不能自动写进成绩</b>——一旦出错，教师失去的是对整门课数据的信任。所以每条判定都要过一次审批门控。",
+    rows:[
+      ["三栏结构","左边学生列表（进度可见）、中间原始答卷（不做任何高亮干扰）、右边 AI 判定与理由。"],
+      ["给理由，不只给结论","不说「这题错了」，而说「选 B 说明把有气体生成误当成氧化还原的标准」。教师能验证，才敢采纳。"],
+      ["审批门控","采纳 / 修改 / 忽略三个动作。Agent 的 5 个工具全部经此门控调用，每次确认记录确认人。"]
+    ],
+    metrics:[["39 项","Agent 验收全相符<br>审批通过 / 取消 / 越权 / 清理"],["5 个","真实工具<br>全部经审批门控"],["0.82","错因判定置信度示例<br>诊断探针中的组内中位"]]
+  },
+  {
+    tag:"03", title:"障碍诊断：回答「为什么错」，而不是「错了多少」",
+    lead:"现有阅卷、搜题、题库产品解决的是「统计」和「答案」。<b>教师真正缺的是归因</b>：这个学生为什么错、错在哪一步、该补哪个前序知识。这一屏是产品存在的理由。",
+    rows:[
+      ["一句话结论","不是「氧化还原薄弱」，而是「把两个概念放进了同一个抽屉」。结论要具体到可验证。"],
+      ["三条独立证据","单题 → 同类型题一致性 → 跨考试一致性。三条来源相互印证，才敢下归因，避免把偶然失误当成能力缺陷。"],
+      ["给动作，不给评价","不说「多刷题」，而说「用 15 分钟重建化合价升降，再回做这 3 道原题验证」。可执行、可验收。"]
+    ],
+    metrics:[["3 条","独立证据链<br>单题 / 同类型 / 跨考试"],["8 道","本次错题<br>5 道归因到同一前序知识点"],["15 min","建议的最小干预时长<br>替代「多刷题」"]]
+  },
+  {
+    tag:"04", title:"班级报告：给教师看的，不是给校长看的",
+    lead:"报告的目的不是「呈现数据」，是<b>决定下一节课讲什么</b>。所以只保留三个判断：整体水平、最该补的知识点、哪几个学生需要单独干预。",
+    rows:[
+      ["四个数字，不加更多","平均分 / 及格率 / 最薄弱知识点 / 需干预人数。多一个指标，决策成本就高一档。"],
+      ["错因分布用直接标注","四条横条，颜色区分错因类别，数值直接标在右侧——不用图例来回对照。"],
+      ["目标线而非排名","知识点用「得分率 vs 年级目标线」，让教师判断「差多少」，而不是「谁比谁强」。"]
+    ],
+    metrics:[["43 道","错题全量归因<br>不是抽样"],["7 人","需干预学生<br>已生成个别诊断"],["1 屏","一屏内完成<br>「下节课讲什么」的判断"]]
+  },
+  {
+    tag:"05", title:"AI 出题：审核是信号，教师确认才是闸门",
+    lead:"大模型出化学题最大的风险不是「出得不好」，是<b>出得看起来很对但科学性错误</b>。所以生成之后先过四维审核——但审核不构成放行依据，真正决定入库的是教师逐题确认。",
+    rows:[
+      ["四维审核","系数配平（硬阻断）、反应条件、产物稳定性、分子结构（软告警）。配平必须 100% 正确，其余三维只提示、不拦截。"],
+      ["审核只对含方程式的题生效","概念型选择题没有可审的方程式内容，审核结论如实呈现，但不作为入库依据。"],
+      ["反直觉判断：不接 Agent","出题走单轮表单：选知识点 → 生成 → 审核结果如实呈现 → 教师逐题确认 → 入库。不引入多轮 Agent，避免计费不可控。"],
+      ["教师始终是决策者","采纳 / 退回重出。AI 负责生成与自检，教师负责判断是否进课堂；未实现的能力不注册、不渲染。"]
+    ],
+    metrics:[["33 / 33","AI 出题验收通过<br>真实 API / 模型 / 数据库"],["1 + 3","1 个硬阻断（配平）<br>3 个软告警"],["4 维","系数配平 / 反应条件<br>产物稳定性 / 分子结构"]]
+  }
+];
+
+const chromeMeta = [
+  ["chemai.local / 高二(3)班 / 期中考试", "考试 / <b>期中考试 · 化学</b>"],
+  ["chemai.local / 高二(3)班 / 批改", "批改 / <b>主观题 · 第 12 题</b>"],
+  ["chemai.local / 高二(3)班 / 障碍诊断", "障碍诊断 / <b>学生个体</b>"],
+  ["chemai.local / 高二(3)班 / 班级报告", "班级报告 / <b>期中考试 · 化学</b>"],
+  ["chemai.local / 高二(3)班 / AI 出题", "AI 出题 / <b>补弱练习单</b>"]
+];
+
+let cur = 0;
+function go(n){
+  cur = Math.max(0, Math.min(panels.length - 1, n));
+  document.querySelectorAll('.scr').forEach((el,i)=>el.classList.toggle('on', i===cur));
+  document.querySelectorAll('#tabs .tab').forEach((el,i)=>el.classList.toggle('on', i===cur));
+  document.querySelectorAll('.side .navitem').forEach((el,i)=>el.classList.toggle('on', i===cur));
+  document.getElementById('cnt').textContent = String(cur+1).padStart(2,'0') + ' / 05';
+  document.querySelector('.addr').textContent = chromeMeta[cur][0];
+  document.querySelector('.crumb').innerHTML = chromeMeta[cur][1];
+  const p = panels[cur];
+  document.getElementById('panel').innerHTML = `
+    <div class="ptag">屏幕 <b>${p.tag}</b> / 05</div>
+    <h2>${p.title}</h2>
+    <p class="lead">${p.lead}</p>
+    <div class="kv">${p.rows.map(([k,v])=>`<div class="row"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
+    <div class="metrics">${p.metrics.map(([n,l])=>`<div class="metric"><div class="num">${n}</div><div class="lab">${l}</div></div>`).join('')}</div>
+  `;
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+});
+go(0);
+</script>
+</body>
+</html>
