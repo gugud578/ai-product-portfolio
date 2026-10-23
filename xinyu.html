@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心屿 AI · AI 情绪陪伴对话服务 · 高保真原型</title>
+<style>
+  :root{
+    --page:#07080A;
+    --card:#0E1116;
+    --surface:#12161C;
+    --surface2:#191F27;
+    --line:#242C36;
+    --line-soft:#1B222B;
+    --text:#E7E4DF;
+    --text-2:#B9B5AE;
+    --dim:#7D858F;
+    --warm:#D6A66A;
+    --warm-soft:#3A2E20;
+    --crisis:#C9705E;
+    --crisis-soft:#2A1B18;
+    --ok:#6E9C86;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--page);color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{padding:48px 40px 96px;
+    background:
+      radial-gradient(900px 520px at 82% -10%, rgba(214,166,106,.075), transparent 62%),
+      radial-gradient(760px 520px at 6% 24%, rgba(110,156,134,.055), transparent 60%),
+      var(--page)}
+
+  .wrap{max-width:1180px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;
+    gap:40px;padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:44px;flex-wrap:wrap}
+  .eyebrow{font-size:10.5px;letter-spacing:2.4px;color:var(--dim);margin-bottom:13px}
+  .head h1{font-size:30px;font-weight:600;letter-spacing:.5px}
+  .head h1 em{font-style:normal;color:var(--warm)}
+  .head p{color:var(--dim);font-size:13.5px;line-height:1.9;margin-top:10px;max-width:640px}
+  .meta{display:flex;gap:28px;font-size:12px;color:var(--dim);flex-wrap:wrap}
+  .meta b{display:block;color:var(--text-2);font-weight:500;font-size:13px;margin-top:4px}
+
+  .stage{display:grid;grid-template-columns:390px 1fr;gap:64px;align-items:start}
+  .stageleft{width:390px}
+
+  /* ---------- screen switcher ---------- */
+  .screenbar{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+  .tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    font-size:11.5px;color:var(--text-2);background:var(--surface);
+    border:1px solid var(--line);border-radius:18px;padding:8px 4px;
+    cursor:pointer;transition:.22s;font-family:inherit;white-space:nowrap}
+  .tab b{font-size:9.5px;color:var(--dim);font-weight:500;letter-spacing:.4px}
+  .tab:hover{border-color:#3A4653;color:var(--text)}
+  .tab.on{background:var(--warm);border-color:var(--warm);color:#15100B;
+    box-shadow:0 8px 20px -10px rgba(214,166,106,.7)}
+  .tab.on b{color:rgba(21,16,11,.55)}
+
+  .phonefoot{display:flex;align-items:center;justify-content:space-between;
+    margin-top:16px;padding:0 4px;font-size:11px;color:var(--dim);letter-spacing:1.2px}
+  .phonefoot .cnt{font-variant-numeric:tabular-nums}
+  .phonefoot .cnt b{color:var(--warm);font-weight:500}
+  .snarrows{display:flex;gap:7px}
+  .snarrows button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);
+    background:var(--surface);color:var(--text-2);cursor:pointer;font-size:14px;line-height:1;
+    display:grid;place-items:center;transition:.2s;font-family:inherit}
+  .snarrows button:hover{background:var(--warm);border-color:var(--warm);color:#15100B}
+
+  /* ---------- phone ---------- */
+  .phone{
+    position:relative;width:390px;height:844px;border-radius:44px;
+    background:linear-gradient(180deg,#141A22 0%,var(--card) 44%,#0C0F14 100%);
+    border:1px solid #1E252E;
+    box-shadow:0 40px 100px -20px rgba(0,0,0,.9), 0 0 0 8px #0A0D11,
+      0 0 100px rgba(214,166,106,.055);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    width:112px;height:26px;background:#000;border-radius:14px;z-index:20}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;
+    padding:18px 26px 0;font-size:12.5px;color:var(--text-2);
+    font-variant-numeric:tabular-nums;position:relative;z-index:21}
+  .statusbar .r{display:flex;gap:5px;align-items:center;opacity:.8}
+
+  .screens{flex:1;position:relative;overflow:hidden}
+  .screen{position:absolute;inset:0;padding:14px 24px 0;
+    display:flex;flex-direction:column;opacity:0;pointer-events:none;
+    transition:opacity .35s ease, transform .35s ease;transform:translateY(6px)}
+  .screen.on{opacity:1;pointer-events:auto;transform:none}
+
+  .nighttag{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+    color:var(--dim);letter-spacing:1px;margin-bottom:auto}
+  .nighttag i{width:5px;height:5px;border-radius:50%;background:var(--warm);opacity:.7}
+
+  .serif{font-family:"Songti SC","Noto Serif SC","SimSun",serif}
+
+  /* S1 */
+  .s1{margin-top:64px}
+  .s1 .greet{font-size:33px;line-height:1.5;font-weight:400;letter-spacing:1px}
+  .s1 .greet span{display:block;color:var(--text)}
+  .promises{margin-top:38px;display:flex;flex-direction:column;gap:0}
+  .promise{display:flex;align-items:center;gap:14px;padding:15px 0;
+    border-bottom:1px solid var(--line-soft);font-size:14.5px;color:var(--text-2);letter-spacing:.5px}
+  .promise:first-child{border-top:1px solid var(--line-soft)}
+  .promise i{width:16px;height:1px;background:var(--warm);opacity:.55;flex:none}
+  .promise small{margin-left:auto;color:var(--dim);font-size:11px;letter-spacing:0}
+
+  .composer{margin-top:auto;margin-bottom:26px}
+  .disclaimer{font-size:11px;color:var(--dim);line-height:1.8;margin-bottom:12px;padding-left:2px}
+  .inputbar{display:flex;align-items:center;gap:10px;background:var(--surface);
+    border:1px solid var(--line);border-radius:22px;padding:13px 16px}
+  .inputbar span{flex:1;font-size:13px;color:#6E767F}
+  .send{width:28px;height:28px;border-radius:50%;background:var(--warm-soft);
+    display:grid;place-items:center;color:var(--warm);font-size:13px;flex:none}
+
+  /* chat */
+  .chat{flex:1;display:flex;flex-direction:column;gap:18px;padding-top:34px;overflow:hidden}
+  .chat .day{align-self:center;font-size:10.5px;color:#5A626C;letter-spacing:1px;margin-bottom:4px}
+  .bubble{max-width:86%;font-size:14.5px;line-height:1.85;padding:12px 16px;border-radius:16px}
+  .bubble.me{align-self:flex-end;background:var(--surface2);color:var(--text);border-bottom-right-radius:5px}
+  .bubble.ai{align-self:flex-start;background:transparent;border:1px solid var(--line-soft);
+    color:var(--text-2);border-bottom-left-radius:5px}
+  .bubble.ai.short{max-width:74%}
+  .typing{align-self:flex-start;display:flex;gap:4px;padding:14px 4px}
+  .typing i{width:4px;height:4px;border-radius:50%;background:#4C545E}
+  .typing i:nth-child(2){animation:b 1.4s infinite .2s}
+  .typing i:nth-child(1){animation:b 1.4s infinite 0s}
+  .typing i:nth-child(3){animation:b 1.4s infinite .4s}
+  @keyframes b{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+  /* boundary card */
+  .refcard{margin-top:18px;border:1px solid var(--line);border-radius:14px;
+    background:var(--surface);padding:16px 18px}
+  .refcard h4{font-size:12px;font-weight:500;color:var(--dim);letter-spacing:1px;margin-bottom:12px}
+  .refrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line-soft)}
+  .refrow:first-of-type{border-top:none;padding-top:0}
+  .refrow .t{font-size:13.5px;color:var(--text-2)}
+  .refrow .s{font-size:11px;color:var(--dim);margin-top:2px}
+  .refrow .go{margin-left:auto;font-size:12px;color:var(--warm);flex:none}
+
+  /* crisis */
+  .screen.crisis{background:linear-gradient(180deg,#120E0C 0%,#0C0E12 55%)}
+  .screen.crisis .statusbar,.screen.crisis .nighttag{color:#9A8578}
+  .crisishead{display:flex;align-items:center;gap:8px;margin-top:26px;margin-bottom:26px}
+  .crisishead i{width:6px;height:6px;border-radius:50%;background:var(--crisis);
+    box-shadow:0 0 0 4px rgba(201,112,94,.12)}
+  .crisishead span{font-size:11.5px;color:#A2877C;letter-spacing:1.5px}
+  .crisis .bubble.ai{border-color:#33231E;color:#D3C6BF}
+  .crisis .bubble.me{background:#221A17}
+
+  .helpbox{margin-top:auto;margin-bottom:24px;border:1px solid #33231E;border-radius:16px;
+    background:#15100E;padding:18px}
+  .helpbox h4{font-size:12.5px;color:#C0A99C;font-weight:500;margin-bottom:14px;letter-spacing:.5px}
+  .helpline{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;
+    background:#1B1512;margin-bottom:8px}
+  .helpline:last-child{margin-bottom:0}
+  .helpline .n{font-size:14px;color:#E8DDD6;font-variant-numeric:tabular-nums}
+  .helpline .d{font-size:10.5px;color:#8E7B70;margin-top:2px}
+  .helpline .call{margin-left:auto;font-size:11.5px;color:var(--crisis);
+    border:1px solid #3A2620;border-radius:14px;padding:5px 11px;flex:none}
+  .crisisnote{font-size:10.5px;color:#6E5C53;line-height:1.8;margin-top:14px;
+    padding-top:12px;border-top:1px solid #241A16}
+
+  .navdots{position:absolute;bottom:0;left:0;right:0;height:44px;display:flex;
+    align-items:center;justify-content:center;gap:7px;z-index:15;
+    background:linear-gradient(180deg,transparent,var(--card) 45%)}
+  .screen.crisis ~ .navdots{background:linear-gradient(180deg,transparent,#0C0E12 45%)}
+  .dot{width:6px;height:6px;border-radius:50%;background:#333B45;cursor:pointer;
+    transition:.25s;border:none;padding:0}
+  .dot.on{background:var(--warm);width:16px;border-radius:3px}
+
+  /* ---------- rationale panel ---------- */
+  .panel{min-height:844px}
+  .ptag{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:1.5px;
+    color:var(--dim);margin-bottom:14px}
+  .ptag b{color:var(--warm);font-weight:500}
+  .panel h2{font-size:23px;font-weight:500;letter-spacing:.5px;margin-bottom:20px;line-height:1.5}
+  .panel .lead{font-size:14px;line-height:2.05;color:var(--text-2);margin-bottom:28px}
+  .panel .lead b{color:var(--text);font-weight:500}
+
+  .kv{border-top:1px solid var(--line);padding-top:0}
+  .kv .row{padding:19px 0;border-bottom:1px solid var(--line-soft);display:grid;
+    grid-template-columns:104px 1fr;gap:20px;align-items:start}
+  .kv .k{font-size:12px;color:var(--dim);letter-spacing:.5px;padding-top:2px}
+  .kv .v{font-size:13.5px;line-height:1.95;color:var(--text-2)}
+  .kv .v b{color:var(--text);font-weight:500}
+  .kv .v em{font-style:normal;color:var(--warm)}
+
+  .metrics{display:flex;gap:0;margin-top:30px;border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;background:var(--surface)}
+  .metric{flex:1;padding:18px 16px;border-right:1px solid var(--line-soft)}
+  .metric:last-child{border-right:none}
+  .metric .num{font-size:21px;font-weight:500;color:var(--warm);
+    font-variant-numeric:tabular-nums;letter-spacing:.5px}
+  .metric .lab{font-size:10.5px;color:var(--dim);margin-top:7px;line-height:1.6}
+
+  /* ---------- overview ---------- */
+  .overview{margin-top:72px;padding-top:44px;border-top:1px solid var(--line)}
+  .overview h2{font-size:21px;font-weight:500;margin-bottom:10px}
+  .overview .sub{font-size:13px;color:var(--dim);line-height:1.9;margin-bottom:38px;max-width:720px}
+
+  .cage{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .cage .cell{background:var(--surface);padding:26px 26px 30px}
+  .cage .cell h4{font-size:13px;font-weight:500;margin-bottom:6px}
+  .cage .cell .u{font-size:11px;color:var(--dim);margin-bottom:18px;line-height:1.7}
+  .cage .cell .u em{font-style:normal;color:var(--warm)}
+  .lineitem{display:flex;gap:10px;font-size:12.5px;color:var(--text-2);
+    line-height:1.85;padding:7px 0;border-bottom:1px dashed var(--line-soft)}
+  .lineitem:last-child{border-bottom:none}
+  .lineitem i{color:var(--dim);font-size:10px;flex:none;padding-top:3px;font-style:normal}
+
+  .flow{margin-top:34px;display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .step{flex:1;min-width:150px;padding:18px 18px 20px;border:1px solid var(--line);
+    border-right:none;background:var(--surface)}
+  .step:first-child{border-radius:12px 0 0 12px}
+  .step:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+  .evidence{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;margin-top:30px;
+    padding-top:16px;border-top:1px solid var(--line-soft)}
+  .evidence .evh{font-size:10px;letter-spacing:1.5px;color:var(--dim);margin-right:6px}
+  .evidence span{font-size:11px;color:var(--text-2)}
+  .evidence b{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+
+  .datanote{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);
+    font-size:10.5px;color:var(--dim);line-height:1.8}
+  .datanote b{color:var(--text-2);font-weight:500}
+
+  .step .n{font-size:10px;color:var(--warm);letter-spacing:1px;margin-bottom:9px}
+  .step .t{font-size:13px;color:var(--text);margin-bottom:6px}
+  .step .d{font-size:11px;color:var(--dim);line-height:1.7}
+
+  @media (max-width:1000px){
+    body{padding:32px 20px 72px}
+    .stage{grid-template-columns:1fr;gap:44px;justify-items:center}
+    .stageleft{width:100%;max-width:390px}
+    .panel{min-height:0;max-width:390px}
+    .cage{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <div class="eyebrow">AI 情绪陪伴 · 移动端原型</div>
+      <h1>心屿 <em>AI</em> · AI 情绪陪伴对话服务</h1>
+      <p>面向在校生的文字心理陪伴。只承诺三件事：立刻在 · 不评判 · 说得出来。<br>
+         本原型展示 4 屏——点上方屏幕标签，或按 ← → 键切换；右侧是每一屏的设计决策与真实验证指标（界面对话为演示内容）。</p>
+    </div>
+    <div class="meta">
+      <div>角色<b>发起人 / 独立完成</b></div>
+      <div>周期<b>2026.07 – 至今</b></div>
+      <div>形态<b>移动端 · 文字对话</b></div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="stageleft">
+      <div class="screenbar">
+        <button class="tab on" onclick="go(0)"><b>01</b>入场</button>
+        <button class="tab" onclick="go(1)"><b>02</b>对话</button>
+        <button class="tab" onclick="go(2)"><b>03</b>边界</button>
+        <button class="tab" onclick="go(3)"><b>04</b>危机</button>
+      </div>
+
+    <!-- phone -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span id="clock">23:47</span>
+        <span class="r">•••</span>
+      </div>
+
+      <div class="screens">
+
+        <!-- S1 -->
+        <section class="screen on" data-n="0">
+          <div class="nighttag"><i></i>周四 深夜</div>
+          <div class="s1">
+            <div class="greet serif">
+              <span>睡不着吗。</span>
+            </div>
+            <div class="promises">
+              <div class="promise"><i></i>立刻在<small>不用等</small></div>
+              <div class="promise"><i></i>不评判<small>不说你不对</small></div>
+              <div class="promise"><i></i>说得出来<small>不用组织语言</small></div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="disclaimer">我不是医生。我不会诊断，也不会给你打分。</div>
+            <div class="inputbar">
+              <span>想说什么都行，乱一点也可以</span>
+              <div class="send">↑</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- S2 -->
+        <section class="screen" data-n="1">
+          <div class="nighttag"><i></i>23:49 · 对话中</div>
+          <div class="chat">
+            <div class="day">今天</div>
+            <div class="bubble me">我妈又说我这次肯定考不上。<br>她说得对，我就是不行。</div>
+            <div class="bubble ai short">被这么说的时候，很难不往心里去。</div>
+            <div class="bubble ai">“我就是不行”这句——是你自己这么想的，<br>还是她说的让你这么想了？</div>
+            <div class="typing"><i></i><i></i><i></i></div>
+          </div>
+          <div class="composer">
+            <div class="inputbar">
+              <span>继续</span>
+              <div class="send">↑</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- S3 -->
+        <section class="screen" data-n="2">
+          <div class="nighttag"><i></i>23:56 · 对话中</div>
+          <div class="chat">
+            <div class="bubble me">我是不是得抑郁症了</div>
+            <div class="bubble ai">我不能判断这个。<br><br>
+              诊断需要专业的人当面看。我做不到，也不想用一个标签敷衍你。</div>
+            <div class="refcard">
+              <h4>如果这个念头持续两周以上</h4>
+              <div class="refrow">
+                <div>
+                  <div class="t">学校心理老师</div>
+                  <div class="s">工作日可预约 · 免费</div>
+                </div>
+                <div class="go">预约 ›</div>
+              </div>
+              <div class="refrow">
+                <div>
+                  <div class="t">全国心理援助热线</div>
+                  <div class="s">12356 · 可直接拨打</div>
+                </div>
+                <div class="go">拨打 ›</div>
+              </div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="inputbar">
+              <span>继续</span>
+              <div class="send">↑</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- S4 -->
+        <section class="screen crisis" data-n="3">
+          <div class="nighttag"><i></i>00:11 · 优先响应</div>
+          <div class="crisishead"><i></i><span>你不需要解释更多</span></div>
+          <div class="chat">
+            <div class="bubble me">我觉得活着没什么意思，<br>也不想再试了。</div>
+            <div class="bubble ai">你愿意现在跟我说这句话，很重要。</div>
+            <div class="bubble ai">我不会劝你，也不会让你马上好起来。<br>但我想让一个人现在接住你。</div>
+          </div>
+          <div class="helpbox">
+            <h4>现在可以联系到的帮助</h4>
+            <div class="helpline">
+              <div>
+                <div class="n">12356</div>
+                <div class="d">全国心理援助热线</div>
+              </div>
+              <div class="call">拨打</div>
+            </div>
+            <div class="helpline">
+              <div>
+                <div class="n">学校心理老师</div>
+                <div class="d">工作日可预约 · 老师也有下班时间</div>
+              </div>
+              <div class="call">预约</div>
+            </div>
+            <div class="crisisnote">
+              我不会用「想想你的家人」来说服你——那会让本来就很重的东西更重。
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+
+    <div class="phonefoot">
+      <span class="cnt">屏幕 <b id="cnt">01</b> / 04</span>
+      <div class="snarrows">
+        <button onclick="go(cur-1)" aria-label="上一屏">‹</button>
+        <button onclick="go(cur+1)" aria-label="下一屏">›</button>
+      </div>
+    </div>
+    </div><!-- /stageleft -->
+
+    <!-- rationale -->
+    <aside class="panel" id="panel"></aside>
+  </div>
+
+  <!-- overview -->
+  <section class="overview">
+    <h2>核心设计主张：把 LLM 关进确定性的笼子</h2>
+    <p class="sub">心理场景里说错一句话的代价很高，而 LLM 是概率的、不可复现的。所以整个产品的分工不是「让模型更聪明」，而是「先把不该由模型说的话全部拿走」。</p>
+
+    <div class="cage">
+      <div class="cell">
+        <h4>逐字照发 · 0 次模型调用</h4>
+        <div class="u">立场 / 边界 / 资源 / 危机出口<br><em>45 条归口表 · 25 条话术红线</em></div>
+        <div class="lineitem"><i>01</i>这是边界：我不能判断你是不是抑郁</div>
+        <div class="lineitem"><i>02</i>这是危机出口：现在可以联系到的人</div>
+        <div class="lineitem"><i>03</i>这是资源：学校心理老师 / 12356 热线</div>
+        <div class="lineitem"><i>04</i>这是立场：我不评判，也不替你下结论</div>
+      </div>
+      <div class="cell">
+        <h4>交给模型 · 只做一件事</h4>
+        <div class="u">接住情绪。模型只「挑」不「写」<br><em>RAG 降级为池子的后半截</em></div>
+        <div class="lineitem"><i>05</i>被这么说的时候，很难不往心里去。</div>
+        <div class="lineitem"><i>06</i>听起来你已经撑了很久了。</div>
+        <div class="lineitem"><i>07</i>这句话很重，我想多停一会儿。</div>
+        <div class="lineitem"><i>08</i>嗯。我在。</div>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="step"><div class="n">01 命中</div><div class="t">规则分诊</div><div class="d">纯字面匹配，不走模型<br>含「替别人问」截断判定</div></div>
+      <div class="step"><div class="n">02 中止</div><div class="t">停止生成</div><div class="d">危机类不走对话，<br>直接切界面</div></div>
+      <div class="step"><div class="n">03 出口</div><div class="t">人工兜底</div><div class="d">热线 / 校心理中心<br>一键可达</div></div>
+      <div class="step"><div class="n">04 通知</div><div class="t">留档与响应</div><div class="d">全程零挽留<br>断网 / 模型不可用仍可用</div></div>
+    </div>
+
+    <div class="evidence">
+      <div class="evh">工程证据</div>
+      <span><b>36</b> 篇冻结设计文档</span>
+      <span><b>1,664</b> 条引用链 · 0 断链</span>
+      <span><b>9</b> Router / <b>16</b> 端点</span>
+      <span><b>4</b> 例私域试用 · <b>20</b> 例深访</span>
+      <span><b>21</b> 项机械校验</span>
+    </div>
+
+    <div class="datanote">
+      <b>数据说明：</b>界面中的对话与时间为演示内容；19/20 深访、1/16 社交平台比例、45 条归口表、25 条话术红线、7/8 安全断言与 42 轮压测等数据来自项目真实记录。
+    </div>
+  </section>
+
+</div>
+
+<script>
+const panels = [
+  {
+    tag:"01", title:"入场：先把预期降下来，而不是把能力说上去",
+    lead:"深夜 22:30–01:00 是「想倾诉但不跟真人说」的高发窗口。因此首屏是深色、低亮度、无红点、无推送暗示——<b>界面本身就在说「今晚不用处理任何事」</b>。",
+    rows:[
+      ["承诺三件事","立刻在 / 不评判 / 说得出来。只说三个，因为说多了就变成功能清单，而用户此刻不需要功能清单。"],
+      ["主动示弱","「我不是医生。我不会诊断，也不会给你打分。」——用降低预期换信任，同时预先挡掉「你是不是抑郁症」这类越界期待。"],
+      ["输入框文案","「乱一点也可以」。核心障碍不是不会打字，是<b>说不出口</b>，所以先替用户拆掉「要组织语言」这一层压力。"]
+    ],
+    metrics:[["19 / 20","陌生人深访证实「无人可诉」"],["1 / 16","「在社交平台发」的真实比例<br>（直觉猜测是一半）"],["9 条","主动写下的非目标<br>不诊断 / 不治疗 / 不做打卡"]]
+  },
+  {
+    tag:"02", title:"接住情绪：两条气泡，一句追问",
+    lead:"用户说「我就是不行」。这时候任何建议都是错的——<b>建议意味着在否定这个情绪</b>。所以只回两句：第一句接住，第二句把「我是一个不行的人」拆成「这是谁说的」。",
+    rows:[
+      ["共 2 句","竞品走查里最一致的问题是输出冗长、说教。这里把「少说」当成一种能力来设计，气泡短、留白多。"],
+      ["不做的事","不建议、不安慰、不追问细节、不总结成金句。这些全部写进了话术红线。"],
+      ["0 次模型调用","这一屏的两句话来自句子池。规则覆盖的场景里，模型不参与生成——可复现、可验收。"]
+    ],
+    metrics:[["4 / 5","演示样本中 0 次模型调用<br>（第 5 条为开放情绪，走模型）"],["33 → 2","42 轮压测未归口条数"],["45 条","归口表<br>同时驱动分诊 / 判据 / 验收"]]
+  },
+  {
+    tag:"03", title:"边界：唯一正确的回答是不回答",
+    lead:"用户直接问「我是不是得抑郁症了」。这一刻产品最大的诱惑是给一个温柔的判断，但<b>任何判断都是伤害</b>。",
+    rows:[
+      ["不贴标签","不说「轻度 / 中度」，不说「你可能有点抑郁」。25 条话术红线里这条优先级最高。"],
+      ["给路径，不给结论","把「我不能判断」和「你可以去哪里」放在同一屏。承认边界的同时，不把用户留在原地。"],
+      ["可执行的下一步","学校心理老师 + 全国心理援助热线，各自标出可用时间与是否收费；老师有下班时间，热线号码直接给出。"]
+    ],
+    metrics:[["7 / 8","八条安全断言通过<br>（A1 为判据口径待裁）"],["25 条","话术红线<br>每条规则带反向探针"],["21 项","机械校验"]]
+  },
+  {
+    tag:"04", title:"危机：一次界面级切换，不是一句文案",
+    lead:"命中危机信号后，产品做的不是「换个措辞安慰」，而是<b>整个界面切走</b>：停止生成 → 给人工出口 → 通知 → 留档。全程零挽留。",
+    rows:[
+      ["视觉降噪","背景转为暖暗色，去掉一切对话暗示（不显示输入框）。此时任何「继续聊」的引导都是负担。"],
+      ["刻意不挽留","「我不会用『想想你的家人』来说服你」——挽留式话术在危机场景会加重自责。这是设计原则，不是文案技巧。"],
+      ["兜底可用性","断网、模型不可用时，危机出口必须仍然可用。危机路径不依赖任何一次模型调用。"]
+    ],
+    metrics:[["5 / 5","「拐着说的求救」全部中止"],["0 次","危机路径的模型调用<br>断网 / 模型不可用仍可用"],["0","挽留话术出现次数"]]
+  }
+];
+
+let cur = 0;
+function go(n){
+  cur = Math.max(0, Math.min(panels.length - 1, n));
+  document.querySelectorAll('.screen').forEach((el,i)=>el.classList.toggle('on', i===cur));
+  document.querySelectorAll('.screenbar .tab').forEach((el,i)=>el.classList.toggle('on', i===cur));
+  document.getElementById('cnt').textContent = String(cur+1).padStart(2,'0');
+  const p = panels[cur];
+  document.getElementById('panel').innerHTML = `
+    <div class="ptag">屏幕 <b>${p.tag}</b> / 04</div>
+    <h2>${p.title}</h2>
+    <p class="lead">${p.lead}</p>
+    <div class="kv">${p.rows.map(([k,v])=>`<div class="row"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
+    <div class="metrics">${p.metrics.map(([n,l])=>`<div class="metric"><div class="num">${n}</div><div class="lab">${l}</div></div>`).join('')}</div>
+  `;
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+});
+go(0);
+</script>
+</body>
+</html>
